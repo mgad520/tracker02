@@ -48,6 +48,19 @@ const formatLongDate = (date) =>
 
 const formatMonth = (date) => date.toLocaleDateString('en-US', { month: 'long' });
 
+export const getCurrentCycleDay = (today = new Date(), startDate = START_DATE, cycleLength = CYCLE_LENGTH) => {
+  const normalizedToday = new Date(today);
+  normalizedToday.setHours(0, 0, 0, 0);
+
+  const normalizedStartDate = new Date(startDate);
+  normalizedStartDate.setHours(0, 0, 0, 0);
+
+  const diffInDays = Math.floor((normalizedToday - normalizedStartDate) / 86400000);
+  const cycleDay = diffInDays + 1;
+
+  return Math.min(cycleLength, Math.max(1, cycleDay));
+};
+
 export const getActivePhases = (day) => {
   if (day === PHASE_DEFINITIONS.ovulation.start) {
     return [PHASE_DEFINITIONS.ovulation];
@@ -108,7 +121,7 @@ export const getPhaseLabel = (phase) => {
   return 'Follicular';
 };
 
-export const generateCycleTimeline = (startDate, cycleLength = CYCLE_LENGTH) =>
+export const generateCycleTimeline = (startDate, cycleLength = CYCLE_LENGTH, currentCycleDay = getCurrentCycleDay()) =>
   Array.from({ length: cycleLength }, (_, index) => {
     const day = index + 1;
     const date = new Date(startDate.getTime());
@@ -125,7 +138,7 @@ export const generateCycleTimeline = (startDate, cycleLength = CYCLE_LENGTH) =>
       phase: phases.map((phase) => phase.label).join(' / '),
       description: getDescription(day),
       fertility: getFertility(day),
-      isCurrentDay: day === CURRENT_CYCLE_DAY,
+      isCurrentDay: day === currentCycleDay,
       isOvulationDay: day === OVULATION_DAY
     };
   });

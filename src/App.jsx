@@ -5,20 +5,38 @@ import CycleSummaryCard from './components/CycleSummaryCard';
 import DayDetailsModal from './components/DayDetailsModal';
 import {
   CYCLE_LENGTH,
-  CURRENT_CYCLE_DAY,
   DISPLAY_START_DATE,
   generateCycleTimeline,
+  getCurrentCycleDay,
   getNextPeriodCountdown,
   getNextPhaseCountdown
 } from './utils/cycleLogic';
 
 function App() {
-  const cycleTimeline = generateCycleTimeline(DISPLAY_START_DATE);
-  const [simulatedDay, setSimulatedDay] = useState(CURRENT_CYCLE_DAY);
+  const [currentCycleDay, setCurrentCycleDay] = useState(() => getCurrentCycleDay());
+  const cycleTimeline = generateCycleTimeline(DISPLAY_START_DATE, CYCLE_LENGTH, currentCycleDay);
+  const [simulatedDay, setSimulatedDay] = useState(() => getCurrentCycleDay());
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
-  const progressPercent = Math.round((CURRENT_CYCLE_DAY / CYCLE_LENGTH) * 100);
+  const progressPercent = Math.round((currentCycleDay / CYCLE_LENGTH) * 100);
   const selectedDayEntry = cycleTimeline.find((item) => item.day === simulatedDay) ?? cycleTimeline[0];
+
+  useEffect(() => {
+    const updateCurrentDay = () => {
+      setCurrentCycleDay(getCurrentCycleDay());
+    };
+
+    updateCurrentDay();
+
+    const timer = window.setInterval(updateCurrentDay, 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedDay) {
+      setSimulatedDay(currentCycleDay);
+    }
+  }, [currentCycleDay, selectedDay]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -32,7 +50,7 @@ function App() {
     return () => window.clearInterval(timer);
   }, [isPlaying]);
 
-  const currentDayEntry = cycleTimeline.find((item) => item.day === CURRENT_CYCLE_DAY) ?? cycleTimeline[0];
+  const currentDayEntry = cycleTimeline.find((item) => item.day === currentCycleDay) ?? cycleTimeline[0];
   const nextPhaseCountdown = getNextPhaseCountdown(currentDayEntry.day, currentDayEntry.phase);
   const nextPeriodCountdown = getNextPeriodCountdown(currentDayEntry.day);
 
@@ -73,7 +91,7 @@ function App() {
             setSelectedDay(item);
             setSimulatedDay(item.day);
           }}
-          currentCycleDay={CURRENT_CYCLE_DAY}
+          currentCycleDay={currentCycleDay}
         />
 
         <section className="insight-card">
