@@ -501,11 +501,22 @@ button {
 }
 
 @media (max-width: 760px) {
+  .app {
+    padding: 0.9rem;
+  }
+
   .summary-stats,
   .modal-grid,
   .customization-controls,
   .customization-summary {
     grid-template-columns: 1fr;
+  }
+
+  .calendar-header,
+  .customization-header,
+  .summary-card-top {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .calendar-grid {
@@ -525,7 +536,7 @@ button {
 
 @media (max-width: 560px) {
   .app {
-    padding: 0.7rem;
+    padding: 0.6rem;
   }
 
   .app-header,
@@ -534,14 +545,50 @@ button {
   .insight-card,
   .customization-card,
   .modal-card {
-    border-radius: 18px;
+    border-radius: 16px;
+  }
+
+  .app-header,
+  .summary-card,
+  .calendar-card,
+  .insight-card,
+  .customization-card {
+    padding: 0.9rem;
+  }
+
+  .hero-copy h1 {
+    font-size: 1.3rem;
+  }
+
+  .customization-hint {
+    max-width: none;
   }
 
   .calendar-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
   }
 
   .weekday-label {
     display: none;
+  }
+
+  .calendar-cell {
+    min-height: 88px;
+    font-size: 0.95rem;
+  }
+
+  .summary-stats {
+    gap: 0.6rem;
+  }
+
+  .insight-details {
+    width: 100%;
+    gap: 0.6rem;
+  }
+
+  .insight-details > div {
+    min-width: 0;
+    width: 100%;
   }
 }

@@ -17,6 +17,20 @@ export const getDefaultStartDate = (today = new Date()) => {
   return `${year}-${month}-${day}`;
 };
 
+export const normalizeCycleSetting = (value, fallback, min, max) => {
+  if (value === '' || value === null || value === undefined) {
+    return fallback;
+  }
+
+  const parsedValue = Number(value);
+  if (!Number.isFinite(parsedValue)) {
+    return fallback;
+  }
+
+  const roundedValue = Math.round(parsedValue);
+  return Math.min(max, Math.max(min, roundedValue));
+};
+
 const getNormalizedPeriodLength = (periodLength = PERIOD_LENGTH) => {
   const parsedPeriodLength = Number(periodLength);
   if (!Number.isFinite(parsedPeriodLength)) {

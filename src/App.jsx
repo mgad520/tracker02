@@ -10,13 +10,14 @@ import {
   getCurrentCycleDay,
   getDefaultStartDate,
   getNextPeriodCountdown,
-  getNextPhaseCountdown
+  getNextPhaseCountdown,
+  normalizeCycleSetting
 } from './utils/cycleLogic';
 
 const DEFAULT_CYCLE_CONFIG = {
   startDate: getDefaultStartDate(),
-  cycleLength: CYCLE_LENGTH,
-  periodLength: PERIOD_LENGTH
+  cycleLength: String(CYCLE_LENGTH),
+  periodLength: String(PERIOD_LENGTH)
 };
 
 const loadCycleConfig = () => {
@@ -33,8 +34,8 @@ const loadCycleConfig = () => {
     const parsedConfig = JSON.parse(savedConfig);
     return {
       startDate: parsedConfig?.startDate || DEFAULT_CYCLE_CONFIG.startDate,
-      cycleLength: Number(parsedConfig?.cycleLength) || DEFAULT_CYCLE_CONFIG.cycleLength,
-      periodLength: Number(parsedConfig?.periodLength) || DEFAULT_CYCLE_CONFIG.periodLength
+      cycleLength: String(parsedConfig?.cycleLength ?? DEFAULT_CYCLE_CONFIG.cycleLength),
+      periodLength: String(parsedConfig?.periodLength ?? DEFAULT_CYCLE_CONFIG.periodLength)
     };
   } catch {
     return DEFAULT_CYCLE_CONFIG;
@@ -44,13 +45,17 @@ const loadCycleConfig = () => {
 function App() {
   const [cycleConfig, setCycleConfig] = useState(loadCycleConfig);
   const [currentCycleDay, setCurrentCycleDay] = useState(() => {
-    const startDate = new Date(`${loadCycleConfig().startDate}T00:00:00`);
-    return getCurrentCycleDay(new Date(), startDate, loadCycleConfig().cycleLength);
+    const savedConfig = loadCycleConfig();
+    const startDate = new Date(`${savedConfig.startDate}T00:00:00`);
+    const cycleLength = normalizeCycleSetting(savedConfig.cycleLength, CYCLE_LENGTH, 21, 45);
+    return getCurrentCycleDay(new Date(), startDate, cycleLength);
   });
   const cycleStartDate = new Date(`${cycleConfig.startDate}T00:00:00`);
-  const cycleTimeline = generateCycleTimeline(cycleStartDate, cycleConfig.cycleLength, currentCycleDay, cycleConfig.periodLength);
+  const cycleLength = normalizeCycleSetting(cycleConfig.cycleLength, CYCLE_LENGTH, 21, 45);
+  const periodLength = normalizeCycleSetting(cycleConfig.periodLength, PERIOD_LENGTH, 1, 14);
+  const cycleTimeline = generateCycleTimeline(cycleStartDate, cycleLength, currentCycleDay, periodLength);
   const [selectedDay, setSelectedDay] = useState(null);
-  const progressPercent = Math.round((currentCycleDay / cycleConfig.cycleLength) * 100);
+  const progressPercent = Math.round((currentCycleDay / cycleLength) * 100);
   const currentDayEntry = cycleTimeline.find((item) => item.day === currentCycleDay) ?? cycleTimeline[0];
   const selectedDayEntry = selectedDay
     ? cycleTimeline.find((item) => item.day === selectedDay.day) ?? currentDayEntry
@@ -59,14 +64,14 @@ function App() {
   useEffect(() => {
     const updateCurrentDay = () => {
       const startDate = new Date(`${cycleConfig.startDate}T00:00:00`);
-      setCurrentCycleDay(getCurrentCycleDay(new Date(), startDate, cycleConfig.cycleLength));
+      setCurrentCycleDay(getCurrentCycleDay(new Date(), startDate, cycleLength));
     };
 
     updateCurrentDay();
 
     const timer = window.setInterval(updateCurrentDay, 60_000);
     return () => window.clearInterval(timer);
-  }, [cycleConfig.cycleLength, cycleConfig.startDate]);
+  }, [cycleConfig.startDate, cycleLength]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -74,8 +79,8 @@ function App() {
     }
   }, [cycleConfig]);
 
-  const nextPhaseCountdown = getNextPhaseCountdown(currentDayEntry.day, currentDayEntry.phase, cycleConfig.cycleLength, cycleConfig.periodLength);
-  const nextPeriodCountdown = getNextPeriodCountdown(currentDayEntry.day, cycleConfig.cycleLength, cycleConfig.periodLength);
+  const nextPhaseCountdown = getNextPhaseCountdown(currentDayEntry.day, currentDayEntry.phase, cycleLength, periodLength);
+  const nextPeriodCountdown = getNextPeriodCountdown(currentDayEntry.day, cycleLength, periodLength);
 
   return (
     <div className="app">
@@ -130,7 +135,8 @@ function App() {
                 min="21"
                 max="45"
                 value={cycleConfig.cycleLength}
-                onChange={(event) => setCycleConfig((currentConfig) => ({ ...currentConfig, cycleLength: Number(event.target.value) }))}
+                onChange={(event) => setCycleConfig((currentConfig) => ({ ...currentConfig, cycleLength: event.target.value }))}
+                onBlur={() => setCycleConfig((currentConfig) => ({ ...currentConfig, cycleLength: String(normalizeCycleSetting(currentConfig.cycleLength, CYCLE_LENGTH, 21, 45)) }))}
               />
             </label>
 
@@ -141,7 +147,8 @@ function App() {
                 min="1"
                 max="14"
                 value={cycleConfig.periodLength}
-                onChange={(event) => setCycleConfig((currentConfig) => ({ ...currentConfig, periodLength: Number(event.target.value) }))}
+                onChange={(event) => setCycleConfig((currentConfig) => ({ ...currentConfig, periodLength: event.target.value }))}
+                onBlur={() => setCycleConfig((currentConfig) => ({ ...currentConfig, periodLength: String(normalizeCycleSetting(currentConfig.periodLength, PERIOD_LENGTH, 1, 14)) }))}
               />
             </label>
           </div>
