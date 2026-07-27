@@ -363,6 +363,15 @@ button {
   background: #FEE2E2;
 }
 
+.calendar-cell.period-day--short {
+  background: linear-gradient(135deg, #FCE7F3 0%, #FEE2E2 100%);
+  border-color: #EC4899;
+}
+
+.calendar-cell.period-day--short .calendar-phase-name {
+  color: #9D174D;
+}
+
 .calendar-cell-top {
   display: flex;
   justify-content: space-between;

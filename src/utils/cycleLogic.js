@@ -17,6 +17,15 @@ export const getDefaultStartDate = (today = new Date()) => {
   return `${year}-${month}-${day}`;
 };
 
+export const isMenstrualDay = (day, periodLength = PERIOD_LENGTH) => {
+  const normalizedPeriodLength = Number(periodLength);
+  if (!Number.isFinite(normalizedPeriodLength)) {
+    return day >= 1 && day <= PERIOD_LENGTH;
+  }
+
+  return day >= 1 && day <= Math.max(1, Math.round(normalizedPeriodLength));
+};
+
 export const normalizeCycleSetting = (value, fallback, min, max) => {
   if (value === '' || value === null || value === undefined) {
     return fallback;

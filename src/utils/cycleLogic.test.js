@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getActivePhases, getCurrentCycleDay, getDefaultStartDate, getNextPhaseCountdown, getNextPeriodCountdown, normalizeCycleSetting } from './cycleLogic.js';
+import { getActivePhases, getCurrentCycleDay, getDefaultStartDate, getNextPhaseCountdown, getNextPeriodCountdown, isMenstrualDay, normalizeCycleSetting } from './cycleLogic.js';
 
 test('counts down to the next phase from the current day', () => {
   assert.equal(getNextPhaseCountdown(14, 'Follicular Phase / Fertile Window'), 2);
@@ -38,4 +38,10 @@ test('normalizes editable numeric settings without getting stuck at zero', () =>
   assert.equal(normalizeCycleSetting('', 30, 21, 45), 30);
   assert.equal(normalizeCycleSetting('25', 30, 21, 45), 25);
   assert.equal(normalizeCycleSetting(99, 30, 21, 45), 45);
+});
+
+test('treats the configured period length as the menstrual window', () => {
+  assert.equal(isMenstrualDay(1, 5), true);
+  assert.equal(isMenstrualDay(5, 5), true);
+  assert.equal(isMenstrualDay(6, 5), false);
 });

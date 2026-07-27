@@ -2,7 +2,7 @@ import CalendarCell from './CalendarCell';
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function CycleCalendar({ timeline, selectedDay, onSelectDay, currentCycleDay }) {
+function CycleCalendar({ timeline, selectedDay, onSelectDay, currentCycleDay, periodLength }) {
   return (
     <section className="calendar-card">
       <div className="calendar-header">
@@ -32,6 +32,7 @@ function CycleCalendar({ timeline, selectedDay, onSelectDay, currentCycleDay }) 
             selected={selectedDay?.day === item.day}
             currentCycleDay={currentCycleDay}
             onSelect={onSelectDay}
+            periodLength={periodLength}
           />
         ))}
       </div>

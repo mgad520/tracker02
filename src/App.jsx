@@ -168,6 +168,7 @@ function App() {
             setSelectedDay(item);
           }}
           currentCycleDay={currentCycleDay}
+          periodLength={periodLength}
         />
 
         <section className="insight-card">

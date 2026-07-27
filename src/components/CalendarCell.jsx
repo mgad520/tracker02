@@ -1,16 +1,17 @@
 import PhaseBadge from './PhaseBadge';
-import { getPhaseLabel } from '../utils/cycleLogic';
+import { getPhaseLabel, isMenstrualDay } from '../utils/cycleLogic';
 
-function CalendarCell({ item, selected, currentCycleDay, onSelect }) {
+function CalendarCell({ item, selected, currentCycleDay, onSelect, periodLength }) {
   const isCurrentDay = item.day === currentCycleDay;
-  const isPeriodDay = item.day >= 1 && item.day <= 6;
+  const isPeriodDay = isMenstrualDay(item.day, periodLength);
+  const isShortPeriod = Number(periodLength) < 6;
   const isFertileWindow = item.day >= 11 && item.day <= 16;
   const phaseLabel = getPhaseLabel(item.phase);
 
   return (
     <button
       type="button"
-      className={`calendar-cell ${selected ? 'selected' : ''} ${isCurrentDay ? 'current-day' : ''} ${item.isOvulationDay ? 'ovulation-day' : ''} ${isFertileWindow ? 'fertile-window' : ''} ${isPeriodDay ? 'period-day' : ''}`}
+      className={`calendar-cell ${selected ? 'selected' : ''} ${isCurrentDay ? 'current-day' : ''} ${item.isOvulationDay ? 'ovulation-day' : ''} ${isFertileWindow ? 'fertile-window' : ''} ${isPeriodDay ? 'period-day' : ''} ${isPeriodDay && isShortPeriod ? 'period-day--short' : ''}`}
       onClick={() => onSelect(item)}
     >
       <div className="calendar-cell-top">
