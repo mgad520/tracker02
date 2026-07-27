@@ -15,11 +15,12 @@ import {
 function App() {
   const [currentCycleDay, setCurrentCycleDay] = useState(() => getCurrentCycleDay());
   const cycleTimeline = generateCycleTimeline(DISPLAY_START_DATE, CYCLE_LENGTH, currentCycleDay);
-  const [simulatedDay, setSimulatedDay] = useState(() => getCurrentCycleDay());
-  const [isPlaying, setIsPlaying] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const progressPercent = Math.round((currentCycleDay / CYCLE_LENGTH) * 100);
-  const selectedDayEntry = cycleTimeline.find((item) => item.day === simulatedDay) ?? cycleTimeline[0];
+  const currentDayEntry = cycleTimeline.find((item) => item.day === currentCycleDay) ?? cycleTimeline[0];
+  const selectedDayEntry = selectedDay
+    ? cycleTimeline.find((item) => item.day === selectedDay.day) ?? currentDayEntry
+    : currentDayEntry;
 
   useEffect(() => {
     const updateCurrentDay = () => {
@@ -32,25 +33,6 @@ function App() {
     return () => window.clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    if (!selectedDay) {
-      setSimulatedDay(currentCycleDay);
-    }
-  }, [currentCycleDay, selectedDay]);
-
-  useEffect(() => {
-    if (!isPlaying) {
-      return undefined;
-    }
-
-    const timer = window.setInterval(() => {
-      setSimulatedDay((currentDay) => (currentDay >= CYCLE_LENGTH ? 1 : currentDay + 1));
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [isPlaying]);
-
-  const currentDayEntry = cycleTimeline.find((item) => item.day === currentCycleDay) ?? cycleTimeline[0];
   const nextPhaseCountdown = getNextPhaseCountdown(currentDayEntry.day, currentDayEntry.phase);
   const nextPeriodCountdown = getNextPeriodCountdown(currentDayEntry.day);
 
@@ -64,16 +46,9 @@ function App() {
             <p className="hero-subtitle">A calm, compact view of your cycle with highlights for your current day, fertile window, and ovulation.</p>
           </div>
 
-          <div className="control-row">
-            <button type="button" className="control-button" onClick={() => setSimulatedDay((currentDay) => Math.max(1, currentDay - 1))}>
-              Previous
-            </button>
-            <button type="button" className="control-button primary" onClick={() => setIsPlaying((currentValue) => !currentValue)}>
-              {isPlaying ? 'Pause' : 'Play'}
-            </button>
-            <button type="button" className="control-button" onClick={() => setSimulatedDay((currentDay) => Math.min(CYCLE_LENGTH, currentDay + 1))}>
-              Next
-            </button>
+          <div className="current-day-summary">
+            <p className="eyebrow">Cycle current day</p>
+            <strong>Day {currentDayEntry.day} • {currentDayEntry.date.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })} • {currentDayEntry.weekday}</strong>
           </div>
         </header>
 
@@ -89,15 +64,14 @@ function App() {
           selectedDay={selectedDay}
           onSelectDay={(item) => {
             setSelectedDay(item);
-            setSimulatedDay(item.day);
           }}
           currentCycleDay={currentCycleDay}
         />
 
         <section className="insight-card">
           <div>
-            <p className="eyebrow">Selected day</p>
-            <h3>{selectedDayEntry.weekday}, {selectedDayEntry.month} {selectedDayEntry.date.getDate()}</h3>
+            <p className="eyebrow">{selectedDay ? 'Selected day' : 'Current day'}</p>
+            <h3>Day {selectedDayEntry.day} • {selectedDayEntry.date.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })} • {selectedDayEntry.weekday}</h3>
           </div>
           <div className="insight-details">
             <div>

@@ -1,6 +1,6 @@
 export const CYCLE_LENGTH = 30;
-export const START_DATE = new Date('2026-07-10T19:00:00');
-export const CURRENT_CYCLE_DAY = 14;
+export const START_DATE = new Date('2026-07-23T00:00:00');
+export const CURRENT_CYCLE_DAY = 5;
 export const OVULATION_DAY = 16;
 export const DISPLAY_START_DATE = new Date(START_DATE);
 

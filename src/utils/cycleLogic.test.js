@@ -16,9 +16,10 @@ test('counts down to the next period from the current day', () => {
 });
 
 test('derives the current cycle day from the current date', () => {
-  const startDate = new Date('2026-07-10T00:00:00');
+  const startDate = new Date('2026-07-23T00:00:00');
 
-  assert.equal(getCurrentCycleDay(new Date('2026-07-10T00:00:00'), startDate), 1);
-  assert.equal(getCurrentCycleDay(new Date('2026-07-27T00:00:00'), startDate), 18);
-  assert.equal(getCurrentCycleDay(new Date('2026-08-10T00:00:00'), startDate), 30);
+  assert.equal(getCurrentCycleDay(new Date('2026-07-23T00:00:00'), startDate), 1);
+  assert.equal(getCurrentCycleDay(new Date('2026-07-27T00:00:00'), startDate), 5);
+  assert.equal(getCurrentCycleDay(new Date('2026-08-22T00:00:00'), startDate), 30);
+  assert.equal(getCurrentCycleDay(new Date('2026-07-27T00:00:00')), 5);
 });
