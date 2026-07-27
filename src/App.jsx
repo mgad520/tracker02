@@ -5,18 +5,52 @@ import CycleSummaryCard from './components/CycleSummaryCard';
 import DayDetailsModal from './components/DayDetailsModal';
 import {
   CYCLE_LENGTH,
-  DISPLAY_START_DATE,
+  PERIOD_LENGTH,
   generateCycleTimeline,
   getCurrentCycleDay,
+  getDefaultStartDate,
   getNextPeriodCountdown,
   getNextPhaseCountdown
 } from './utils/cycleLogic';
 
+const DEFAULT_CYCLE_CONFIG = {
+  startDate: getDefaultStartDate(),
+  cycleLength: CYCLE_LENGTH,
+  periodLength: PERIOD_LENGTH
+};
+
+const loadCycleConfig = () => {
+  if (typeof window === 'undefined') {
+    return DEFAULT_CYCLE_CONFIG;
+  }
+
+  try {
+    const savedConfig = window.localStorage.getItem('cycle-config');
+    if (!savedConfig) {
+      return DEFAULT_CYCLE_CONFIG;
+    }
+
+    const parsedConfig = JSON.parse(savedConfig);
+    return {
+      startDate: parsedConfig?.startDate || DEFAULT_CYCLE_CONFIG.startDate,
+      cycleLength: Number(parsedConfig?.cycleLength) || DEFAULT_CYCLE_CONFIG.cycleLength,
+      periodLength: Number(parsedConfig?.periodLength) || DEFAULT_CYCLE_CONFIG.periodLength
+    };
+  } catch {
+    return DEFAULT_CYCLE_CONFIG;
+  }
+};
+
 function App() {
-  const [currentCycleDay, setCurrentCycleDay] = useState(() => getCurrentCycleDay());
-  const cycleTimeline = generateCycleTimeline(DISPLAY_START_DATE, CYCLE_LENGTH, currentCycleDay);
+  const [cycleConfig, setCycleConfig] = useState(loadCycleConfig);
+  const [currentCycleDay, setCurrentCycleDay] = useState(() => {
+    const startDate = new Date(`${loadCycleConfig().startDate}T00:00:00`);
+    return getCurrentCycleDay(new Date(), startDate, loadCycleConfig().cycleLength);
+  });
+  const cycleStartDate = new Date(`${cycleConfig.startDate}T00:00:00`);
+  const cycleTimeline = generateCycleTimeline(cycleStartDate, cycleConfig.cycleLength, currentCycleDay, cycleConfig.periodLength);
   const [selectedDay, setSelectedDay] = useState(null);
-  const progressPercent = Math.round((currentCycleDay / CYCLE_LENGTH) * 100);
+  const progressPercent = Math.round((currentCycleDay / cycleConfig.cycleLength) * 100);
   const currentDayEntry = cycleTimeline.find((item) => item.day === currentCycleDay) ?? cycleTimeline[0];
   const selectedDayEntry = selectedDay
     ? cycleTimeline.find((item) => item.day === selectedDay.day) ?? currentDayEntry
@@ -24,17 +58,24 @@ function App() {
 
   useEffect(() => {
     const updateCurrentDay = () => {
-      setCurrentCycleDay(getCurrentCycleDay());
+      const startDate = new Date(`${cycleConfig.startDate}T00:00:00`);
+      setCurrentCycleDay(getCurrentCycleDay(new Date(), startDate, cycleConfig.cycleLength));
     };
 
     updateCurrentDay();
 
     const timer = window.setInterval(updateCurrentDay, 60_000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [cycleConfig.cycleLength, cycleConfig.startDate]);
 
-  const nextPhaseCountdown = getNextPhaseCountdown(currentDayEntry.day, currentDayEntry.phase);
-  const nextPeriodCountdown = getNextPeriodCountdown(currentDayEntry.day);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('cycle-config', JSON.stringify(cycleConfig));
+    }
+  }, [cycleConfig]);
+
+  const nextPhaseCountdown = getNextPhaseCountdown(currentDayEntry.day, currentDayEntry.phase, cycleConfig.cycleLength, cycleConfig.periodLength);
+  const nextPeriodCountdown = getNextPeriodCountdown(currentDayEntry.day, cycleConfig.cycleLength, cycleConfig.periodLength);
 
   return (
     <div className="app">
@@ -51,6 +92,60 @@ function App() {
             <strong>Day {currentDayEntry.day} • {currentDayEntry.date.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })} • {currentDayEntry.weekday}</strong>
           </div>
         </header>
+
+        <section className="customization-card">
+          <div className="customization-header">
+            <div>
+              <p className="eyebrow">Customization</p>
+              <h2>Cycle settings</h2>
+            </div>
+            <p className="customization-hint">Enter how many days your period usually lasts, and adjust the rest of the cycle if needed.</p>
+          </div>
+
+          <div className="customization-summary" aria-label="Current cycle summary">
+            <div>
+              <span className="summary-label">Recent info</span>
+              <strong>Day {currentDayEntry.day} • {currentDayEntry.date.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })}</strong>
+            </div>
+            <div>
+              <span className="summary-label">Saved settings</span>
+              <strong>{new Date(`${cycleConfig.startDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {cycleConfig.cycleLength} days • {cycleConfig.periodLength} day period</strong>
+            </div>
+          </div>
+
+          <div className="customization-controls">
+            <label className="customization-field">
+              <span>Cycle start date</span>
+              <input
+                type="date"
+                value={cycleConfig.startDate}
+                onChange={(event) => setCycleConfig((currentConfig) => ({ ...currentConfig, startDate: event.target.value }))}
+              />
+            </label>
+
+            <label className="customization-field">
+              <span>Cycle length</span>
+              <input
+                type="number"
+                min="21"
+                max="45"
+                value={cycleConfig.cycleLength}
+                onChange={(event) => setCycleConfig((currentConfig) => ({ ...currentConfig, cycleLength: Number(event.target.value) }))}
+              />
+            </label>
+
+            <label className="customization-field">
+              <span>Period lasts (days)</span>
+              <input
+                type="number"
+                min="1"
+                max="14"
+                value={cycleConfig.periodLength}
+                onChange={(event) => setCycleConfig((currentConfig) => ({ ...currentConfig, periodLength: Number(event.target.value) }))}
+              />
+            </label>
+          </div>
+        </section>
 
         <CycleSummaryCard
           currentDayEntry={currentDayEntry}

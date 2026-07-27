@@ -1,15 +1,42 @@
 export const CYCLE_LENGTH = 30;
+export const PERIOD_LENGTH = 6;
 export const START_DATE = new Date('2026-07-23T00:00:00');
 export const CURRENT_CYCLE_DAY = 5;
 export const OVULATION_DAY = 16;
 export const DISPLAY_START_DATE = new Date(START_DATE);
 
-export const PHASE_DEFINITIONS = {
-  menstrual: { label: 'Menstrual Phase', start: 1, end: 6 },
-  follicular: { label: 'Follicular Phase', start: 1, end: 16 },
-  fertileWindow: { label: 'Fertile Window', start: 11, end: 16 },
-  ovulation: { label: 'Ovulation', start: 16, end: 16 },
-  luteal: { label: 'Luteal Phase', start: 17, end: 30 }
+export const getDefaultStartDate = (today = new Date()) => {
+  const normalizedToday = new Date(today);
+  normalizedToday.setHours(0, 0, 0, 0);
+  normalizedToday.setDate(normalizedToday.getDate() - 4);
+
+  const year = normalizedToday.getFullYear();
+  const month = String(normalizedToday.getMonth() + 1).padStart(2, '0');
+  const day = String(normalizedToday.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
+const getNormalizedPeriodLength = (periodLength = PERIOD_LENGTH) => {
+  const parsedPeriodLength = Number(periodLength);
+  if (!Number.isFinite(parsedPeriodLength)) {
+    return PERIOD_LENGTH;
+  }
+
+  return Math.min(Math.max(Math.round(parsedPeriodLength), 1), 30);
+};
+
+export const getPhaseDefinitions = (periodLength = PERIOD_LENGTH) => {
+  const normalizedPeriodLength = getNormalizedPeriodLength(periodLength);
+  const follicularStart = Math.min(normalizedPeriodLength + 1, 16);
+
+  return {
+    menstrual: { label: 'Menstrual Phase', start: 1, end: normalizedPeriodLength },
+    follicular: { label: 'Follicular Phase', start: follicularStart, end: 16 },
+    fertileWindow: { label: 'Fertile Window', start: 11, end: 16 },
+    ovulation: { label: 'Ovulation', start: 16, end: 16 },
+    luteal: { label: 'Luteal Phase', start: 17, end: 30 }
+  };
 };
 
 export const FERTILITY_LEVELS = {
@@ -61,27 +88,29 @@ export const getCurrentCycleDay = (today = new Date(), startDate = START_DATE, c
   return Math.min(cycleLength, Math.max(1, cycleDay));
 };
 
-export const getActivePhases = (day) => {
-  if (day === PHASE_DEFINITIONS.ovulation.start) {
-    return [PHASE_DEFINITIONS.ovulation];
+export const getActivePhases = (day, periodLength = PERIOD_LENGTH) => {
+  const phaseDefinitions = getPhaseDefinitions(periodLength);
+
+  if (day === phaseDefinitions.ovulation.start) {
+    return [phaseDefinitions.ovulation];
   }
 
   const phases = [];
 
-  if (day >= PHASE_DEFINITIONS.menstrual.start && day <= PHASE_DEFINITIONS.menstrual.end) {
-    phases.push(PHASE_DEFINITIONS.menstrual);
+  if (day >= phaseDefinitions.menstrual.start && day <= phaseDefinitions.menstrual.end) {
+    phases.push(phaseDefinitions.menstrual);
   }
 
-  if (day >= PHASE_DEFINITIONS.follicular.start && day <= PHASE_DEFINITIONS.follicular.end) {
-    phases.push(PHASE_DEFINITIONS.follicular);
+  if (day >= phaseDefinitions.follicular.start && day <= phaseDefinitions.follicular.end) {
+    phases.push(phaseDefinitions.follicular);
   }
 
-  if (day >= PHASE_DEFINITIONS.fertileWindow.start && day <= PHASE_DEFINITIONS.fertileWindow.end) {
-    phases.push(PHASE_DEFINITIONS.fertileWindow);
+  if (day >= phaseDefinitions.fertileWindow.start && day <= phaseDefinitions.fertileWindow.end) {
+    phases.push(phaseDefinitions.fertileWindow);
   }
 
-  if (day >= PHASE_DEFINITIONS.luteal.start && day <= PHASE_DEFINITIONS.luteal.end) {
-    phases.push(PHASE_DEFINITIONS.luteal);
+  if (day >= phaseDefinitions.luteal.start && day <= phaseDefinitions.luteal.end) {
+    phases.push(phaseDefinitions.luteal);
   }
 
   return phases;
@@ -121,13 +150,13 @@ export const getPhaseLabel = (phase) => {
   return 'Follicular';
 };
 
-export const generateCycleTimeline = (startDate, cycleLength = CYCLE_LENGTH, currentCycleDay = getCurrentCycleDay()) =>
+export const generateCycleTimeline = (startDate, cycleLength = CYCLE_LENGTH, currentCycleDay = getCurrentCycleDay(), periodLength = PERIOD_LENGTH) =>
   Array.from({ length: cycleLength }, (_, index) => {
     const day = index + 1;
     const date = new Date(startDate.getTime());
     date.setDate(startDate.getDate() + index);
 
-    const phases = getActivePhases(day);
+    const phases = getActivePhases(day, periodLength);
 
     return {
       day,
@@ -143,7 +172,7 @@ export const generateCycleTimeline = (startDate, cycleLength = CYCLE_LENGTH, cur
     };
   });
 
-export const getNextPhaseCountdown = (currentDay, currentPhaseLabel, cycleLength = CYCLE_LENGTH) => {
+export const getNextPhaseCountdown = (currentDay, currentPhaseLabel, cycleLength = CYCLE_LENGTH, periodLength = PERIOD_LENGTH) => {
   if (currentDay <= 0 || currentDay > cycleLength) {
     return 1;
   }
@@ -151,19 +180,19 @@ export const getNextPhaseCountdown = (currentDay, currentPhaseLabel, cycleLength
   const currentPhase = typeof currentPhaseLabel === 'string' ? currentPhaseLabel : '';
   const nextPhaseDay = Array.from({ length: cycleLength - currentDay }, (_, index) => currentDay + index + 1)
     .find((day) => {
-      const nextPhaseLabel = getActivePhases(day).map((phase) => phase.label).join(' / ');
+      const nextPhaseLabel = getActivePhases(day, periodLength).map((phase) => phase.label).join(' / ');
       return nextPhaseLabel !== currentPhase;
     });
 
   return nextPhaseDay ? nextPhaseDay - currentDay : 1;
 };
 
-export const getNextPeriodCountdown = (currentDay, cycleLength = CYCLE_LENGTH) => {
+export const getNextPeriodCountdown = (currentDay, cycleLength = CYCLE_LENGTH, periodLength = PERIOD_LENGTH) => {
   if (currentDay <= 0 || currentDay > cycleLength) {
     return 1;
   }
 
-  if (currentDay >= 1 && currentDay <= 6) {
+  if (currentDay >= 1 && currentDay <= periodLength) {
     return 0;
   }
 

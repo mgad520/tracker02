@@ -40,7 +40,8 @@ button {
 .app-header,
 .summary-card,
 .calendar-card,
-.insight-card {
+.insight-card,
+.customization-card {
   border-radius: 20px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -107,10 +108,69 @@ button {
   border-color: transparent;
 }
 
-.summary-card {
+.summary-card,
+.customization-card {
   padding: 1rem 1.1rem;
   display: grid;
   gap: 0.95rem;
+}
+
+.customization-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.customization-hint {
+  margin: 0;
+  color: var(--muted);
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.customization-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.customization-summary > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.customization-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.customization-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.customization-field span {
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.customization-field input {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  background: #FFF;
+  color: var(--text);
+  font: inherit;
 }
 
 .summary-card-top {
@@ -442,7 +502,9 @@ button {
 
 @media (max-width: 760px) {
   .summary-stats,
-  .modal-grid {
+  .modal-grid,
+  .customization-controls,
+  .customization-summary {
     grid-template-columns: 1fr;
   }
 
@@ -470,6 +532,7 @@ button {
   .summary-card,
   .calendar-card,
   .insight-card,
+  .customization-card,
   .modal-card {
     border-radius: 18px;
   }
